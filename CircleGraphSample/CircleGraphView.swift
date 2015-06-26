@@ -98,7 +98,7 @@ class CircleGraphView: UIImageView {
         self.numFemale = numFemale
         
         permilliMale = Int(1000 * (Double(numMale)/Double(numMale + numFemale)))
-        permilliFemale = Int(1000 * (Double(numMale)/Double(numMale + numFemale)))
+        permilliFemale = Int(1000 * (Double(numFemale)/Double(numMale + numFemale)))
         count = 0
         
         stopAnime()
