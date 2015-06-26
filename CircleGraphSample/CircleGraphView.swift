@@ -25,6 +25,11 @@ class CircleGraphView: UIImageView {
     private var numMale: Int = 0
     private var numFemale: Int = 0
     
+    private var permilliMale: Int = 0
+    private var permilliFemale: Int = 0
+    
+    private var count: Int = 0
+    
     private var oldTheta: CGFloat = 0
     
     override func layoutSubviews() {
@@ -42,36 +47,36 @@ class CircleGraphView: UIImageView {
         oval.fill()
     }
     
-    func setGraph(numMale:Int, numFemale:Int) {
+    func setGraph(numMale: Int, numFemale: Int) {
+        setGraph(numMale, numFemale: numFemale, numBlank: 0)
+    }
+    
+    func setGraph(numMale: Int, numFemale: Int, numBlank: Int) {
         self.numMale = numMale
         self.numFemale = numFemale
         
-        let maleRaito:Double = Double(numMale) / Double(numMale + numFemale)
-        let femaleRaito:Double = Double(numFemale) / Double(numMale + numFemale)
+        let malePoint: CGFloat = CGFloat(360*(Double(numMale) / Double(numMale + numFemale + numBlank))*RADIAN_RAITO)
+        let femalePoint: CGFloat = CGFloat(360*(Double(numFemale) / Double(numMale + numFemale + numBlank))*RADIAN_RAITO) + malePoint
+        let blankPoint: CGFloat = CGFloat(360*(Double(numBlank) / Double(numMale + numFemale + numBlank))*RADIAN_RAITO) + femalePoint
         
         UIGraphicsBeginImageContext(CGSizeMake(frame.size.width, frame.size.height))
         drawBackGround()
-        
-        if (numMale < numFemale) {
-            drawHalfCircle(CGFloat(360*(maleRaito)*RADIAN_RAITO) - CGFloat(90*RADIAN_RAITO), drawContext: .male)
-            drawHalfCircle(CGFloat(270*RADIAN_RAITO), drawContext: .female)
-            drawHalfCircle(CGFloat(360*(maleRaito)*RADIAN_RAITO) + CGFloat(90*RADIAN_RAITO), drawContext: .female)
-        } else if (numMale > numFemale){
-            drawHalfCircle(CGFloat(360*(maleRaito)*RADIAN_RAITO) + CGFloat(90*RADIAN_RAITO), drawContext: .female)
-            drawHalfCircle(CGFloat(90*RADIAN_RAITO), drawContext: .male)
-            drawHalfCircle(CGFloat(360*(maleRaito)*RADIAN_RAITO) - CGFloat(90*RADIAN_RAITO), drawContext: .male)
-        } else {
-            drawHalfCircle(CGFloat(90*RADIAN_RAITO), drawContext: .male)
-            drawHalfCircle(CGFloat(270*RADIAN_RAITO), drawContext: .female)
-        }
-        
+
+        drawGraph(0, endAngle: malePoint, drawContext: .male)
+        drawGraph(malePoint, endAngle: femalePoint, drawContext: .female)
+        drawGraph(femalePoint, endAngle: blankPoint, drawContext: .bg)
+    
         image = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
         isSetUped = true
     }
     
-    func drawHalfCircle(startAngle: CGFloat, drawContext: DrawContext) {
-        var arc: UIBezierPath = UIBezierPath(arcCenter: CGPointMake(frame.size.width/2, frame.size.height/2), radius: frame.size.width/2, startAngle: startAngle, endAngle: startAngle + CGFloat(180*RADIAN_RAITO), clockwise: false)
+    func drawGraph(startAngle: CGFloat, endAngle: CGFloat, drawContext: DrawContext) {
+        let tempStartAngle: CGFloat = startAngle - CGFloat(90*RADIAN_RAITO)
+        let tempEndAngle: CGFloat = endAngle - CGFloat(90*RADIAN_RAITO)
+        
+        var arc: UIBezierPath = UIBezierPath(arcCenter: CGPointMake(frame.size.width/2, frame.size.height/2), radius: frame.size.width/2, startAngle: tempStartAngle, endAngle: tempEndAngle, clockwise: true)
+        arc.addLineToPoint(CGPointMake(frame.size.width/2, frame.size.height/2))
         
         switch (drawContext) {
         case .bg:
@@ -84,12 +89,17 @@ class CircleGraphView: UIImageView {
             UIColor.redColor().setFill()
             break
         }
+        
         arc.fill()
     }
-    
+
     func startAnime(numMale:Int, numFemale:Int) {
         self.numMale = numMale
         self.numFemale = numFemale
+        
+        permilliMale = Int(1000 * (Double(numMale)/Double(numMale + numFemale)))
+        permilliFemale = Int(1000 * (Double(numMale)/Double(numMale + numFemale)))
+        count = 0
         
         stopAnime()
         timer = NSTimer.scheduledTimerWithTimeInterval(TIMER_DELAY, target: self, selector: "onTick", userInfo: nil, repeats: true)
@@ -101,5 +111,25 @@ class CircleGraphView: UIImageView {
     }
     
     func onTick() {
+        var numMale: Int = count
+        var numFemale: Int = 0
+        if (permilliMale < count) {
+            numMale = permilliMale
+            
+            if (permilliFemale < count - numMale) {
+                numFemale = permilliFemale
+            } else {
+                numFemale = count - permilliMale
+            }
+        }
+        
+        var numBlank: Int = 1000 - numMale - numFemale
+        
+        setGraph(numMale, numFemale: numFemale, numBlank: numBlank)
+        
+        count += 10
+        if (1000 < count) {
+            stopAnime()
+        }
     }
 }

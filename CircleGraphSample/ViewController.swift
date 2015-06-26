@@ -20,7 +20,7 @@ class ViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         if (isSetUped == false) {
-            circleGraphView.setGraph(14, numFemale: 56)
+            circleGraphView.startAnime(60, numFemale: 40)
             // AutoLayoutならばviewDidLayoutSubViews以降に呼び出してください
             // コードでレイアウトしているならば、どこでもいいです
             // アスペクト比は1:1でお願いします
